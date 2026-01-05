@@ -88,7 +88,7 @@ The "Face" of the radar. It renders the rings, blips, and vectors.
     *   **Webhook URL:** Paste the Cloudflare Worker URL you copied earlier.
 
 3.  **Add the Visuals:**
-    *   **Markup:** Copy and paste the contents of `view.html`.
+    *   **Markup:** Copy and paste the contents of `Trmnl markup`.
     *   *(Note: The CSS is included inside the HTML file, so you can leave the CSS tab blank).*
 
 4.  **Save & Test:**
