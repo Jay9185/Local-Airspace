@@ -1,0 +1,219 @@
+{% assign flights = merge_variables.flights %}
+{% assign location = merge_variables.location %}
+{% assign aircraft_count = merge_variables.aircraft_count %}
+{% assign timestamp = merge_variables.timestamp %}
+
+<div class="trmnl-device">
+    
+    <div class="corner-data top-left">RADAR: ON</div>
+    <div class="corner-data top-right">{{ aircraft_count | default: 0 }} AIRCRAFT</div>
+
+    <div class="radar-scope">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-inner"></div>
+        
+        <div class="north-marker">N</div>
+        <div class="range-label outer-label">{{ location.radius_nm | default: 25 }}nm</div>
+        <div class="range-label inner-label">
+            {% assign half = location.radius_nm | default: 25 | divided_by: 2 %}
+            {{ half }}nm
+        </div>
+
+        <div class="ownship">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <polygon points="12,6 17,18 12,15 7,18" fill="black"/>
+            </svg>
+        </div>
+
+        {% if flights.size > 0 %}
+          {% for flight in flights %}
+            {% assign x = flight.tcas_x | default: 50 %}
+            {% assign y = flight.tcas_y | default: 50 %}
+            {% assign head = flight.heading | default: 0 %}
+            {% assign v_len = flight.vector_length | default: 20 %}
+            
+            {% assign raw_dx = flight.label_dx | default: 20 %}
+            {% assign raw_dy = flight.label_dy | default: 20 %}
+            {% assign dx = raw_dx | times: 0.6 %}
+            {% assign dy = raw_dy | times: 0.6 %}
+
+            <div class="traffic" style="left: {{ x }}%; top: {{ y }}%;">
+                
+                <div class="aircraft-symbol">
+                    <div class="blip">
+                        {% if flight.is_proximate == true %}
+                            <div class="shape-proximate"></div> 
+                        {% else %}
+                            <div class="shape-traffic"></div> 
+                        {% endif %}
+                    </div>
+                    <div class="vector-line" style="height: {{ v_len }}px; transform: rotate({{ head | plus: 180 }}deg);"></div>
+                </div>
+                
+                <svg class="leader-svg" width="200" height="200">
+                      <line x1="0" y1="0" x2="{{ dx }}" y2="{{ dy }}" stroke="black" stroke-width="1.5" />
+                </svg>
+
+                <div class="data-tag" style="transform: translate({{ dx }}px, {{ dy }}px);">
+                    <div class="tag-header">
+                        <span class="callsign">{{ flight.callsign }}</span>
+                        <span class="ac-type">{{ flight.aircraftType }}</span>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <span class="alt">{{ flight.altitude }}</span>
+                        <span class="trend">
+                            {% if flight.is_climbing %}↑{% elsif flight.is_descending %}↓{% endif %}
+                        </span>
+                        <span class="speed">/{{ flight.speed }}kt</span>
+                    </div>
+                </div>
+
+            </div>
+          {% endfor %}
+        {% else %}
+           <div class="no-traffic">NO TRAFFIC DETECTED</div>
+        {% endif %}
+    </div>
+
+    <div class="corner-data bottom-left">RNG: {{ location.radius_nm | default: 25 }}NM</div>
+    <div class="corner-data bottom-right">{{ timestamp }}</div>
+</div>
+
+<style>
+    /* 1. CONTAINER RESET */
+    .trmnl-device {
+        width: 800px;
+        height: 480px;
+        background-color: white;
+        color: black;
+        font-family: "Courier New", Courier, monospace;
+        position: absolute; top: 0; left: 0;
+        overflow: hidden;
+    }
+
+    /* 2. CORNER DATA BOXES */
+    .corner-data {
+        position: absolute;
+        background: black;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        padding: 4px 8px;
+        z-index: 50;
+    }
+    .top-left { top: 15px; left: 15px; }
+    .top-right { top: 15px; right: 15px; }
+    .bottom-left { bottom: 15px; left: 15px; }   
+    .bottom-right { bottom: 15px; right: 15px; } 
+
+    /* 3. RADAR SCOPE */
+    .radar-scope {
+        width: 440px;
+        height: 440px;
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 50%;
+    }
+
+    /* Rings */
+    .ring {
+        position: absolute;
+        border: 1px dashed #444;
+        border-radius: 50%;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.5;
+    }
+    .ring-outer { width: 100%; height: 100%; }
+    .ring-inner { width: 50%; height: 50%; }
+
+    .ownship {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+    }
+
+    /* Labels */
+    .north-marker { position: absolute; top: 2%; left: 50%; transform: translateX(-50%); font-weight: 900; }
+    .range-label { position: absolute; font-size: 12px; background: white; padding: 0 2px; font-weight: 700; transform: translateY(-50%); }
+    .outer-label { top: 50%; right: -5px; }
+    .inner-label { top: 50%; right: 22%; }
+
+    /* 4. TRAFFIC OBJECTS */
+    .traffic {
+        position: absolute;
+        width: 0; height: 0;
+        z-index: 10;
+        transition: all 0.5s linear;
+    }
+
+    .aircraft-symbol {
+        position: absolute; top: 0; left: 0;
+        z-index: 2;
+    }
+
+    /* Blip Shapes */
+    .blip { position: absolute; transform: translate(-50%, -50%); }
+    .shape-proximate { width: 8px; height: 8px; background: black; }
+    .shape-traffic { width: 8px; height: 8px; border: 2px solid black; transform: rotate(45deg); background: white; }
+
+    /* Heading Vector */
+    .vector-line {
+        position: absolute; top: 0; left: 0;
+        width: 2px; background: black;
+        transform-origin: top center;
+        opacity: 0.6;
+        z-index: 1;
+    }
+
+    /* 5. DATA TAGS & LEADER LINES */
+    .leader-svg {
+        position: absolute;
+        top: 0; left: 0;
+        overflow: visible;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .data-tag {
+        position: absolute;
+        top: 0; left: 0; 
+        background: white;
+        border: 2px solid black;
+        padding: 3px 5px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        line-height: 1.1;
+        z-index: 20;
+        /* Add shadow for better readability over lines */
+        box-shadow: 2px 2px 0px rgba(0,0,0,0.1); 
+    }
+
+    .tag-header {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 1px;
+        margin-bottom: 1px;
+    }
+
+    .callsign { font-size: 12px; font-weight: 900; color: black; }
+    
+    /* New Aircraft Type Style */
+    .ac-type { 
+        font-size: 10px; 
+        font-weight: 700; 
+        color: #555; /* Grey to distinguish from callsign */
+    }
+
+    .stats-row { display: flex; gap: 3px; font-size: 10px; opacity: 0.9; }
+    .speed { font-family: monospace; }
+    .trend { font-weight: bold; min-width: 8px; }
+
+    .no-traffic { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; font-weight: 900; }
+</style>
