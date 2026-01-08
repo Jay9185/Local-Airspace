@@ -6,6 +6,19 @@
 
 It performs real-time geometry calculations to plot aircraft positions relative to your exact home location, visualizes heading vectors, indicates vertical trends, and applies smart collision-avoidance logic to keep the display readable.
 
+## ☕️ Support the Project
+
+The **Plan Position Indiactor** open-source and free to use. If you found the code useful, you can fuel my flight training here: 
+
+<div align="center">
+
+<a href="https://buymeacoffee.com/turbulencegains" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="60" width="217">
+</a>
+
+</div>
+
+
 ---
 
 ## ✨ Features
@@ -89,7 +102,7 @@ The "Face" of the radar. It renders the rings, blips, and vectors.
 
 3.  **Add the Visuals:**
     *   **Markup:** Copy and paste the contents of `Trmnl markup`.
-    *   *(Note: The CSS is included inside the HTML file, so you can leave the CSS tab blank).*
+    *   *(Note: The CSS is included inside the Markup file).*
 
 4.  **Save & Test:**
     *   Click **Save**.
