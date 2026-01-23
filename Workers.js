@@ -5,8 +5,8 @@
 // --- CONFIGURATION ---
 // You can override these in Cloudflare Settings -> Variables
 const DEFAULT_CONFIG = {
-  LAT: "28.5562", // Default: New Delhi
-  LON: "77.1000",
+  LAT: "000.00", // Default: New Delhi
+  LON: "00.000",
   RADIUS_NM: "15"
 };
 
