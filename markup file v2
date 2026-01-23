@@ -1,0 +1,241 @@
+{% assign flights = merge_variables.flights %}
+{% assign location = merge_variables.location %}
+{% assign aircraft_count = merge_variables.aircraft_count %}
+{% assign timestamp = merge_variables.timestamp %}
+
+<div class="trmnl-device">
+
+    <div class="sidebar left-panel">
+        <div class="panel-header">WEST SECTOR</div>
+        
+        {% assign l_count = 0 %}
+        {% for flight in flights limit:14 %}
+            {% if flight.tcas_x < 50 %}
+                {% if l_count < 7 %}
+                    <div class="flight-strip">
+                        <div class="strip-id">{{ forloop.index }}</div>
+                        
+                        <div class="strip-data">
+                            <div class="strip-row main">
+                                <span class="callsign">{{ flight.callsign }}</span>
+                                <span class="type">{{ flight.aircraftType }}</span>
+                            </div>
+                            <div class="strip-row sub">
+                                <span>{{ flight.airline | truncate: 12 }}</span>
+                            </div>
+                            <div class="strip-row details">
+                                <span>{{ flight.altitude }}ft</span>
+                                <span>{{ flight.speed }}kt</span>
+                                <span>{% if flight.is_climbing %}▲{% elsif flight.is_descending %}▼{% else %}={% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% assign l_count = l_count | plus: 1 %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if l_count == 0 %}
+            <div class="empty-msg">NO TRAFFIC</div>
+        {% endif %}
+    </div>
+
+    <div class="radar-container">
+        <div class="header-center">RADAR ACTIVE</div>
+        
+        <div class="radar-scope">
+            <div class="ring ring-outer"></div>
+            <div class="ring ring-inner"></div>
+            
+            <div class="tick tick-n">N</div>
+            <div class="tick tick-e">E</div>
+            <div class="tick tick-s">S</div>
+            <div class="tick tick-w">W</div>
+
+            <div class="ownship">
+                <svg width="32" height="32" viewBox="0 0 24 24"><polygon points="12,6 17,18 12,15 7,18" fill="black"/></svg>
+            </div>
+
+            {% if flights.size > 0 %}
+              {% for flight in flights limit:14 %}
+                
+                {% assign x = flight.tcas_x | default: 50 %}
+                {% assign y = flight.tcas_y | default: 50 %}
+                {% assign head = flight.heading | default: 0 %}
+                {% assign rot = head | plus: 180 %} 
+
+                <div class="traffic" style="left: {{ x }}%; top: {{ y }}%;">
+                    
+                    <div class="vector-container" style="transform: rotate({{ rot }}deg);">
+                        <div class="vector-line" style="height: {{ flight.vector_length | default: 20 }}px;"></div>
+                    </div>
+
+                    <div class="aircraft-symbol">
+                        {% if flight.is_proximate == true %}
+                            <div class="shape-proximate"></div> 
+                        {% else %}
+                            <div class="shape-traffic"></div> 
+                        {% endif %}
+                    </div>
+
+                    <div class="id-tag">{{ forloop.index }}</div>
+                </div>
+              {% endfor %}
+            {% else %}
+               <div class="no-traffic">SCANNING...</div>
+            {% endif %}
+        </div>
+        
+        <div class="footer-center">
+            <span>RNG: {{ location.radius_nm }}NM</span>
+            <span>{{ timestamp }}</span>
+        </div>
+    </div>
+
+    <div class="sidebar right-panel">
+        <div class="panel-header">EAST SECTOR</div>
+        
+        {% assign r_count = 0 %}
+        {% for flight in flights limit:14 %}
+            {% if flight.tcas_x >= 50 %}
+                {% if r_count < 7 %}
+                    <div class="flight-strip">
+                        <div class="strip-id">{{ forloop.index }}</div>
+
+                        <div class="strip-data">
+                            <div class="strip-row main">
+                                <span class="callsign">{{ flight.callsign }}</span>
+                                <span class="type">{{ flight.aircraftType }}</span>
+                            </div>
+                            <div class="strip-row sub">
+                                <span>{{ flight.airline | truncate: 12 }}</span>
+                            </div>
+                            <div class="strip-row details">
+                                <span>{{ flight.altitude }}ft</span>
+                                <span>{{ flight.speed }}kt</span>
+                                <span>{% if flight.is_climbing %}▲{% elsif flight.is_descending %}▼{% else %}={% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% assign r_count = r_count | plus: 1 %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if r_count == 0 %}
+            <div class="empty-msg">NO TRAFFIC</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+    /* --- GRID LAYOUT --- */
+    .trmnl-device {
+        width: 800px; height: 480px;
+        background: white; color: black;
+        font-family: sans-serif;
+        position: absolute; top: 0; left: 0;
+        overflow: hidden;
+        display: flex; 
+    }
+
+    /* --- SIDEBARS --- */
+    .sidebar {
+        width: 170px; height: 100%;
+        display: flex; flex-direction: column;
+        border-right: 3px solid black; padding: 5px;
+        z-index: 10; background: white;
+    }
+    .right-panel { border-right: none; border-left: 3px solid black; }
+
+    .panel-header {
+        font-size: 14px; font-weight: 900;
+        text-align: center; border-bottom: 3px solid black;
+        margin-bottom: 0px; padding-bottom: 5px; height: 30px;
+        display: flex; align-items: center; justify-content: center;
+        background: black; color: white;
+    }
+
+    .empty-msg {
+        text-align: center; font-size: 12px; color: black; margin-top: 20px; font-weight: 700;
+    }
+
+    /* Flight Strip Cards */
+    .flight-strip {
+        display: flex; align-items: center;
+        border-bottom: 2px solid black; 
+        padding: 0; height: 58px;
+    }
+    
+    /* The ID Number Box */
+    .strip-id {
+        font-size: 8px; font-weight: 900;
+        width: 28px; text-align: center; margin-right: 5px;
+        background: black; color: white; 
+        height: 28px; line-height: 28px;
+    }
+
+    .strip-data { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+    .strip-row { display: flex; justify-content: space-between; align-items: baseline; line-height: 1.1; }
+    
+    .main { font-weight: 800; font-size: 13px; color: black; }
+    .sub { font-size: 10px; color: black; text-transform: uppercase; margin-bottom: 2px; font-weight: 600; }
+    .details { font-size: 11px; font-family: monospace; font-weight: 700; color: black; }
+    
+    .type { background: black; color: white; padding: 0 3px; font-size: 10px; border-radius: 0px; font-weight: bold; }
+
+    /* --- CENTER RADAR AREA --- */
+    .radar-container {
+        flex-grow: 1; position: relative;
+        display: flex; flex-direction: column; align-items: center;
+        z-index: 1;
+    }
+    
+    .header-center { margin-top: 10px; font-weight: 900; font-size: 14px; height: 20px; }
+    .footer-center { 
+        position: absolute; bottom: 10px; width: 100%; 
+        display: flex; justify-content: space-between; padding: 0 20px;
+        font-weight: 700; font-size: 12px;
+    }
+
+    .radar-scope {
+        width: 380px; height: 380px;
+        margin-top: 20px; 
+        position: relative; border-radius: 50%;
+    }
+
+    .ring { position: absolute; border: 2px solid black; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1; }
+    .ring-outer { width: 100%; height: 100%; }
+    .ring-inner { width: 50%; height: 50%; }
+
+    .tick { position: absolute; font-weight: 900; font-size: 12px; background: white; padding: 2px; z-index: 5; color: black; }
+    .tick-n { top: -8px; left: 50%; transform: translateX(-50%); }
+    .tick-s { bottom: -8px; left: 50%; transform: translateX(-50%); }
+    .tick-e { right: -8px; top: 50%; transform: translateY(-50%); }
+    .tick-w { left: -8px; top: 50%; transform: translateY(-50%); }
+
+    .ownship { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; }
+
+    /* --- TRAFFIC & VECTORS --- */
+    .traffic { position: absolute; width: 0; height: 0; z-index: 10; }
+    .aircraft-symbol { position: absolute; top: 0; left: 0; z-index: 3; transform: translate(-50%, -50%); }
+    
+    .shape-proximate { width: 10px; height: 10px; background: black; border-radius: 50%; }
+    .shape-traffic { width: 8px; height: 8px; border: 2px solid black; transform: rotate(45deg); background: white; }
+    
+    .vector-container { position: absolute; top: 0; left: 0; z-index: 1; }
+    .vector-line { position: absolute; top: 0; left: -0.5px; width: 2px; background: black; transform-origin: top center; }
+
+    /* RADAR ID TAG */
+    .id-tag {
+        position: absolute; top: -16px; left: 8px;
+        font-size: 10px; font-weight: 900;
+        background: white; padding: 0 3px;
+        border: 2px solid black; /* High contrast box */
+        color: black;
+        z-index: 20;
+    }
+
+    .no-traffic { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; font-size: 20px; border: 2px solid black; padding: 5px; }
+</style>
