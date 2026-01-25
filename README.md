@@ -1,7 +1,6 @@
 # 📡 Approach Control: TRMNL Flight Radar 
 
-![IMG20260117120717](https://github.com/user-attachments/assets/257f5fd3-244a-4325-afef-1c57a7cb429d)
-
+![IMG_3536](https://github.com/user-attachments/assets/71823bcb-5c6a-43a9-a6a0-aca124eca6c9)
 
 
 
